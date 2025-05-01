@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Magic Lab Word Game</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #9c27b0, #3f51b5);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            touch-action: manipulation;
+        }
+        
+        .game-container {
+            width: 100%;
+            height: 100%;
+            max-width: 900px;
+            max-height: 450px;
+            background: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><rect width="100" height="100" fill="%23f9f9ff"/><circle cx="10" cy="10" r="2" fill="%23ffcc00"/><circle cx="30" cy="10" r="2" fill="%23ff66cc"/><circle cx="50" cy="10" r="2" fill="%2300ccff"/><circle cx="70" cy="10" r="2" fill="%2366ff66"/><circle cx="90" cy="10" r="2" fill="%23ff9900"/><circle cx="10" cy="30" r="2" fill="%23ff9900"/><circle cx="30" cy="30" r="2" fill="%2300ccff"/><circle cx="50" cy="30" r="2" fill="%2366ff66"/><circle cx="70" cy="30" r="2" fill="%23ffcc00"/><circle cx="90" cy="30" r="2" fill="%23ff66cc"/><circle cx="10" cy="50" r="2" fill="%2366ff66"/><circle cx="30" cy="50" r="2" fill="%23ffcc00"/><circle cx="50" cy="50" r="2" fill="%23ff66cc"/><circle cx="70" cy="50" r="2" fill="%23ff9900"/><circle cx="90" cy="50" r="2" fill="%2300ccff"/><circle cx="10" cy="70" r="2" fill="%23ff66cc"/><circle cx="30" cy="70" r="2" fill="%23ff9900"/><circle cx="50" cy="70" r="2" fill="%23ffcc00"/><circle cx="70" cy="70" r="2" fill="%2300ccff"/><circle cx="90" cy="70" r="2" fill="%2366ff66"/><circle cx="10" cy="90" r="2" fill="%2300ccff"/><circle cx="30" cy="90" r="2" fill="%2366ff66"/><circle cx="50" cy="90" r="2" fill="%23ff9900"/><circle cx="70" cy="90" r="2" fill="%23ff66cc"/><circle cx="90" cy="90" r="2" fill="%23ffcc00"/></svg>');
+            border-radius: 24px;
+            box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 20px;
+            overflow: hidden;
+        }
+        
+        .bubbles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .bubble {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.4));
+            animation: float 5s infinite ease-in-out;
+            pointer-events: none;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(5deg); }
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            z-index: 1;
+        }
+        
+        .score {
+            background-color: #ff9900;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .next-btn {
+            background-color: #66cc66;
+            color: white;
+            border: none;
+            border-radius: 15px;
+            padding: 10px 20px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+        }
+        
+        .next-btn:hover {
+            transform: scale(1.05);
+        }
+        
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+            flex-grow: 1;
+            padding: 10px;
+            z-index: 1;
+        }
+
+        .image-container {
+            width: 200px;
+            height: 200px;
+            background-color: #ffffff;
+            border-radius: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+            margin-bottom: 20px;
+        }
+        
+        .word-image {
+            max-width: 80%;
+            max-height: 80%;
+            object-fit: contain;
+        }
+        
+        .word-boxes {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .letter-box {
+            width: 60px;
+            height: 60px;
+            background-color: #ffffff;
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+            border: 3px dashed #cccccc;
+        }
+        
+        .letter-box.filled {
+            border: 3px solid #66cc66;
+            animation: pulse 0.5s;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        .letters-tray {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 10px;
+        }
+        
+        .letter-tile {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #ff9900, #ff6600);
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s;
+            touch-action: none;
+        }
+        
+        .letter-tile:hover {
+            transform: translateY(-5px);
+        }
+        
+        .letter-tile.dragging {
+            transform: scale(1.1);
+            opacity: 0.8;
+            z-index: 100;
+        }
+        
+        .celebration {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            display: none;
+            z-index: 10;
+        }
+        
+        .confetti {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            opacity: 0;
+        }
+        
+        @keyframes confettiFall {
+            0% { 
+                transform: translateY(-50px) rotate(0deg); 
+                opacity: 1;
+            }
+            100% { 
+                transform: translateY(600px) rotate(360deg); 
+                opacity: 0;
+            }
+        }
+
+        .magic-wand {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            width: 80px;
+            height: 80px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><path d="M85,15L15,85c-1.2,1.2-1.2,3.1,0,4.2c1.2,1.2,3.1,1.2,4.2,0L90,19c1.2-1.2,1.2-3.1,0-4.2C88.1,13.8,86.2,13.8,85,15z" fill="%23663399"/><path d="M25,25l-5-5l-5,5l5,5L25,25z M40,10l-3-7l-3,7l3,7L40,10z M10,40l-7-3l-3,3l3,7L10,40z M80,75l5,5l5-5l-5-5L80,75z M65,90l3,7l3-7l-3-7L65,90z M95,60l7,3l3-3l-3-7L95,60z" fill="%23ffcc00"/><path d="M85,15c-1.2-1.2-3.1-1.2-4.2,0L19,76l5,5l61-61C86.2,18.9,86.2,16.2,85,15z" fill="%23ff99cc"/></svg>');
+            cursor: pointer;
+            z-index: 5;
+            animation: wiggle 3s infinite ease-in-out;
+        }
+        
+        @keyframes wiggle {
+            0%, 100% { transform: rotate(-5deg); }
+            50% { transform: rotate(5deg); }
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .letter-box {
+                width: 50px;
+                height: 50px;
+                font-size: 1.8rem;
+            }
+            
+            .letter-tile {
+                width: 45px;
+                height: 45px;
+                font-size: 1.6rem;
+            }
+            
+            .image-container {
+                width: 180px;
+                height: 180px;
+            }
+        }
+        
+        @media (max-width: 576px) {
+            .letter-box {
+                width: 40px;
+                height: 40px;
+                font-size: 1.5rem;
+            }
+            
+            .letter-tile {
+                width: 35px;
+                height: 35px;
+                font-size: 1.3rem;
+            }
+            
+            .image-container {
+                width: 150px;
+                height: 150px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="bubbles" id="bubbles"></div>
+        <div class="header">
+            <div class="score">Score: <span id="score">0</span></div>
+            <button class="next-btn" id="nextBtn">Next Word</button>
+        </div>
+        
+        <div class="game-area">
+            <div class="image-container">
+                <img id="wordImage" class="word-image" src="/api/placeholder/200/200" alt="Word Image">
+            </div>
+            
+            <div class="word-boxes" id="wordBoxes"></div>
+            
+            <div class="letters-tray" id="lettersTray"></div>
+        </div>
+        
+        <div class="magic-wand" id="hintBtn"></div>
+        
+        <div class="celebration" id="celebration"></div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Game data
+            const words = [
+                { word: 'CAT', image: 'cat.png' },
+                { word: 'DOG', image: 'dog.png' },
+                { word: 'SUN', image: 'sun.png' },
+                { word: 'HAT', image: 'hat.png' },
+                { word: 'BED', image: 'bed.png' },
+                { word: 'BUS', image: 'bus.png' },
+                { word: 'PIG', image: 'pig.png' }
+            ];
+            
+            // Game state
+            let currentWordIndex = 0;
+            let currentWord = '';
+            let score = 0;
+            let lettersPlaced = 0;
+            
+            // DOM elements
+            const scoreDisplay = document.getElementById('score');
+            const nextBtn = document.getElementById('nextBtn');
+            const wordImage = document.getElementById('wordImage');
+            const wordBoxes = document.getElementById('wordBoxes');
+            const lettersTray = document.getElementById('lettersTray');
+            const celebration = document.getElementById('celebration');
+            const bubblesContainer = document.getElementById('bubbles');
+            const hintBtn = document.getElementById('hintBtn');
+            
+            // Create bubbles in the background
+            function createBubbles() {
+                for (let i = 0; i < 15; i++) {
+                    const bubble = document.createElement('div');
+                    bubble.className = 'bubble';
+                    const size = Math.random() * 40 + 10;
+                    bubble.style.width = `${size}px`;
+                    bubble.style.height = `${size}px`;
+                    bubble.style.left = `${Math.random() * 100}%`;
+                    bubble.style.top = `${Math.random() * 100}%`;
+                    bubble.style.animationDuration = `${Math.random() * 3 + 3}s`;
+                    bubble.style.animationDelay = `${Math.random() * 2}s`;
+                    bubblesContainer.appendChild(bubble);
+                }
+            }
+            
+            // Initialize game
+            function initGame() {
+                createBubbles();
+                loadWord(currentWordIndex);
+                
+                // Event listeners
+                nextBtn.addEventListener('click', nextWord);
+                hintBtn.addEventListener('click', giveHint);
+                
+                // Touch event handling
+                document.addEventListener('touchmove', function(e) {
+                    if (e.target.classList.contains('letter-tile') && 
+                        e.target.classList.contains('dragging')) {
+                        e.preventDefault();
+                    }
+                }, { passive: false });
+            }
+            
+            // Load a word
+            function loadWord(index) {
+                // Clear previous word
+                wordBoxes.innerHTML = '';
+                lettersTray.innerHTML = '';
+                
+                // Set current word
+                currentWord = words[index].word;
+                lettersPlaced = 0;
+                
+                // Display image
+                wordImage.setAttribute('src', words[index].image);
+                
+                // Create letter boxes
+                for (let i = 0; i < currentWord.length; i++) {
+                    const box = document.createElement('div');
+                    box.className = 'letter-box';
+                    box.dataset.index = i;
+                    
+                    // Add drop event handlers
+                    box.addEventListener('dragover', allowDrop);
+                    box.addEventListener('drop', handleDrop);
+                    
+                    // Touch event handlers
+                    box.addEventListener('touchmove', allowDrop);
+                    box.addEventListener('touchend', handleTouchDrop);
+                    
+                    wordBoxes.appendChild(box);
+                }
+                
+                // Create letter tiles with shuffled letters
+                const allLetters = currentWord.split('');
+                // Add some random letters
+                const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+                for (let i = 0; i < 3; i++) {
+                    const randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
+                    if (!allLetters.includes(randomLetter)) {
+                        allLetters.push(randomLetter);
+                    }
+                }
+                
+                // Shuffle letters
+                shuffleArray(allLetters);
+                
+                // Create letter tiles
+                allLetters.forEach(letter => {
+                    const tile = document.createElement('div');
+                    tile.className = 'letter-tile';
+                    tile.textContent = letter;
+                    tile.dataset.letter = letter;
+                    tile.draggable = true;
+                    
+                    // Add drag event handlers
+                    tile.addEventListener('dragstart', handleDragStart);
+                    
+                    // Touch event handlers
+                    tile.addEventListener('touchstart', handleTouchStart);
+                    tile.addEventListener('touchmove', handleTouchMove);
+                    tile.addEventListener('touchend', handleTouchEnd);
+                    
+                    lettersTray.appendChild(tile);
+                });
+            }
+            
+            // Drag and drop handlers
+            function handleDragStart(e) {
+                e.dataTransfer.setData('text/plain', e.target.dataset.letter);
+                e.target.classList.add('dragging');
+            }
+            
+            function allowDrop(e) {
+                e.preventDefault();
+            }
+            
+            function handleDrop(e) {
+                e.preventDefault();
+                const letter = e.dataTransfer.getData('text/plain');
+                const boxIndex = parseInt(e.target.dataset.index);
+                
+                if (e.target.classList.contains('letter-box') && !e.target.classList.contains('filled')) {
+                    placeLetter(letter, boxIndex, e.target);
+                }
+                
+                // Remove dragging class from all tiles
+                document.querySelectorAll('.letter-tile').forEach(tile => {
+                    tile.classList.remove('dragging');
+                });
+            }
+            
+            // Touch handlers
+            let touchedTile = null;
+            let offsetX = 0;
+            let offsetY = 0;
+            
+            function handleTouchStart(e) {
+                e.preventDefault();
+                touchedTile = e.target;
+                touchedTile.classList.add('dragging');
+                
+                // Calculate offset
+                const touch = e.touches[0];
+                offsetX = touch.clientX - touchedTile.getBoundingClientRect().left;
+                offsetY = touch.clientY - touchedTile.getBoundingClientRect().top;
+                
+                // Create a clone for visual dragging
+                const clone = touchedTile.cloneNode(true);
+                clone.id = 'draggingClone';
+                clone.style.position = 'absolute';
+                clone.style.zIndex = '1000';
+                clone.style.opacity = '0.8';
+                clone.style.pointerEvents = 'none';
+                document.body.appendChild(clone);
+                
+                positionClone(touch);
+            }
+            
+            function handleTouchMove(e) {
+                if (!touchedTile) return;
+                e.preventDefault();
+                
+                const touch = e.touches[0];
+                positionClone(touch);
+            }
+            
+            function positionClone(touch) {
+                const clone = document.getElementById('draggingClone');
+                if (clone) {
+                    clone.style.left = (touch.clientX - offsetX) + 'px';
+                    clone.style.top = (touch.clientY - offsetY) + 'px';
+                }
+            }
+            
+            function handleTouchEnd(e) {
+                if (!touchedTile) return;
+                e.preventDefault();
+                
+                const clone = document.getElementById('draggingClone');
+                if (clone) {
+                    // Find the element at the touch position
+                    const touch = e.changedTouches[0];
+                    const letterToPlace = touchedTile.dataset.letter;
+                    
+                    // Get all letter boxes
+                    const letterBoxes = document.querySelectorAll('.letter-box:not(.filled)');
+                    let dropped = false;
+                    
+                    letterBoxes.forEach(box => {
+                        const rect = box.getBoundingClientRect();
+                        if (touch.clientX >= rect.left && touch.clientX <= rect.right &&
+                            touch.clientY >= rect.top && touch.clientY <= rect.bottom) {
+                            const boxIndex = parseInt(box.dataset.index);
+                            placeLetter(letterToPlace, boxIndex, box);
+                            dropped = true;
+                        }
+                    });
+                    
+                    // Remove clone and reset
+                    document.body.removeChild(clone);
+                    touchedTile.classList.remove('dragging');
+                    touchedTile = null;
+                }
+            }
+            
+            function handleTouchDrop(e) {
+                // Handled by touchend
+            }
+            
+            // Place a letter in a box
+            function placeLetter(letter, boxIndex, boxElement) {
+                if (currentWord[boxIndex] === letter) {
+                    // Correct letter
+                    boxElement.textContent = letter;
+                    boxElement.classList.add('filled');
+                    lettersPlaced++;
+                    
+                    // Remove the letter tile from tray
+                    const tiles = document.querySelectorAll('.letter-tile');
+                    for (let i = 0; i < tiles.length; i++) {
+                        if (tiles[i].dataset.letter === letter && !tiles[i].classList.contains('used')) {
+                            tiles[i].classList.add('used');
+                            tiles[i].style.visibility = 'hidden';
+                            break;
+                        }
+                    }
+                    
+                    // Check if word is complete
+                    if (lettersPlaced === currentWord.length) {
+                        // Increase score
+                        score += 10;
+                        scoreDisplay.textContent = score;
+                        
+                        // Show celebration
+                        showCelebration();
+                        
+                        // Enable next button
+                        nextBtn.disabled = false;
+                    }
+                } else {
+                    // Wrong letter - add shake animation
+                    boxElement.classList.add('shake');
+                    setTimeout(() => {
+                        boxElement.classList.remove('shake');
+                    }, 500);
+                }
+            }
+            
+            // Show celebration animation
+            function showCelebration() {
+                celebration.style.display = 'block';
+                
+                // Create confetti
+                for (let i = 0; i < 50; i++) {
+                    createConfetti();
+                }
+                
+                // Hide celebration after animation completes
+                setTimeout(() => {
+                    celebration.style.display = 'none';
+                    celebration.innerHTML = '';
+                }, 3000);
+            }
+            
+            // Create a single confetti element
+            function createConfetti() {
+                const confetti = document.createElement('div');
+                confetti.className = 'confetti';
+                
+                // Random confetti properties
+                const colors = ['#ff6699', '#66cc66', '#6699cc', '#ffcc00', '#ff9900'];
+                const size = Math.random() * 10 + 5;
+                const left = Math.random() * 100;
+                const animationDuration = Math.random() * 2 + 1;
+                const delay = Math.random() * 0.5;
+                
+                confetti.style.backgroundColor = colors[Math.floor(Math.random() * colors.length)];
+                confetti.style.width = `${size}px`;
+                confetti.style.height = `${size}px`;
+                confetti.style.left = `${left}%`;
+                confetti.style.top = '-20px';
+                confetti.style.animation = `confettiFall ${animationDuration}s ${delay}s ease-in forwards`;
+                
+                celebration.appendChild(confetti);
+            }
+            
+            // Move to next word
+            function nextWord() {
+                currentWordIndex = (currentWordIndex + 1) % words.length;
+                loadWord(currentWordIndex);
+            }
+            
+            // Give a hint (reveal one letter)
+            function giveHint() {
+                const emptyBoxes = document.querySelectorAll('.letter-box:not(.filled)');
+                if (emptyBoxes.length > 0) {
+                    const randomBox = emptyBoxes[Math.floor(Math.random() * emptyBoxes.length)];
+                    const boxIndex = parseInt(randomBox.dataset.index);
+                    const letter = currentWord[boxIndex];
+                    
+                    // Show magic sparkle effect
+                    const sparkle = document.createElement('div');
+                    sparkle.className = 'sparkle';
+                    sparkle.style.position = 'absolute';
+                    sparkle.style.width = '50px';
+                    sparkle.style.height = '50px';
+                    sparkle.style.background = 'radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 70%)';
+                    sparkle.style.borderRadius = '50%';
+                    sparkle.style.transform = 'translate(-50%, -50%)';
+                    sparkle.style.pointerEvents = 'none';
+                    sparkle.style.zIndex = '100';
+                    
+                    // Position at the box
+                    const boxRect = randomBox.getBoundingClientRect();
+                    const containerRect = document.querySelector('.game-container').getBoundingClientRect();
+                    
+                    sparkle.style.left = (boxRect.left - containerRect.left + boxRect.width/2) + 'px';
+                    sparkle.style.top = (boxRect.top - containerRect.top + boxRect.height/2) + 'px';
+                    
+                    document.querySelector('.game-container').appendChild(sparkle);
+                    
+                    // Animate sparkle
+                    sparkle.animate([
+                        { transform: 'translate(-50%, -50%) scale(0.5)', opacity: 1 },
+                        { transform: 'translate(-50%, -50%) scale(2)', opacity: 0 }
+                    ], {
+                        duration: 800,
+                        easing: 'ease-out'
+                    }).onfinish = () => {
+                        sparkle.remove();
+                        
+                        // Place the letter
+                        placeLetter(letter, boxIndex, randomBox);
+                        
+                        // Reduce score slightly for using hint
+                        score = Math.max(0, score - 2);
+                        scoreDisplay.textContent = score;
+                    };
+                }
+            }
+            
+            // Utility function to shuffle an array
+            function shuffleArray(array) {
+                for (let i = array.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [array[i], array[j]] = [array[j], array[i]];
+                }
+                return array;
+            }
+            
+            // Start the game
+            initGame();
+        });
+    </script>
+</body>
+</html>
